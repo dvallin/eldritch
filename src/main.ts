@@ -1,16 +1,24 @@
 import ROT, { Display } from "rot-js"
 
+import { InputManager } from "@/managers/InputManager"
+import { World } from "mogwai-ecs/lib"
+
 class Game {
     private display: Display
+    private inputManager: InputManager
+    private world: World
     private map: { [key: string]: string }
 
     constructor() {
         this.display = new ROT.Display()
+        this.inputManager = new InputManager("input_mgr")
+        this.world = new World()
         this.map = {}
     }
 
     public init(): void {
         document.body.appendChild(this.display.getContainer())
+        this.inputManager.register(this.world)
         this.generateMap()
     }
 

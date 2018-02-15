@@ -32,6 +32,8 @@
                 140
             ]
         },
+        "no-bitwise": false,
+        "object-literal-sort-keys": false,
         "no-any": true,
         "no-consecutive-blank-lines": false,
         "no-invalid-this": [
