@@ -9,15 +9,14 @@ describe("World Map", () => {
     let game: Game
     beforeEach(() => {
         game = new Game()
-        game.init()
     })
 
     it("renders cities", async () => {
-        new WorldMap()
-            .build(game)
+        game.addGameSystem(new WorldMap())
+        game.build()
 
         // when
-        game.draw()
+        game.tick()
         await requestAnimationFrame()
 
         // then

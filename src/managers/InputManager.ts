@@ -22,8 +22,10 @@ export interface Mouse {
 }
 
 export class InputManager extends Manager<InputState> {
-    constructor(name: string = "inputMgr") {
-        super(name)
+    public static NAME: string = "input_mgr"
+
+    constructor() {
+        super(InputManager.NAME)
     }
 
     public initialState(): InputState {

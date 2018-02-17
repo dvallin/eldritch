@@ -1,32 +1,63 @@
 import ROT, { Display } from "rot-js"
 
-import { VertexTraverser, World } from "mogwai-ecs/lib"
+import { VectorStorage, World } from "mogwai-ecs/lib"
 
-import { Position } from "./components/Position"
-import { Tile } from "./components/Tile"
+import { GameSystem } from "@/GameSystem"
+import { Manager } from "@/managers/Manager"
+
+import { Description } from "@/components/Description"
+import { Position } from "@/components/Position"
+
+const DEFAULT_WIDTH = 100
+const DEFAULT_HEIGHT = 50
 
 export class Game {
     public display: Display
     public world: World
 
+    private managers: Manager<{}>[]
+    private systems: GameSystem[]
+
     constructor() {
-        this.display = new ROT.Display()
+        const displayOptions: ROT.DisplayOptions = {
+            width: DEFAULT_WIDTH,
+            height: DEFAULT_HEIGHT
+        }
+        this.display = new ROT.Display(displayOptions)
         this.world = new World()
+
+        this.world.registerComponent("position", new VectorStorage<Position>())
+        this.world.registerComponent("description", new VectorStorage<Description>())
+
+        this.managers = []
+        this.systems = []
     }
 
-    public init(): void {
+    public addGameSystem(system: GameSystem): void {
+        system.register(this.world)
+        this.systems.push(system)
+    }
+
+    public addManager(manager: Manager<{}>): void {
+        manager.register(this.world)
+        this.managers.push(manager)
+    }
+
+    public build(): void {
         document.body.appendChild(this.display.getContainer())
+        this.systems.forEach((system: GameSystem) => system.build(this.world))
     }
 
-    public draw(): void {
-        this.world.fetch()
-            .on((t: VertexTraverser) => t.hasLabel("tile"))
-            .withComponents("position", "tile")
-            .stream()
-            .each((value: {
-                entity: number, position: Position, tile: Tile
-            }) => {
-                this.display.draw(value.position.x, value.position.y, value.tile.character)
-            })
+    public run(): void {
+        const next = Date.now() + 100
+        this.tick()
+        const untilNextFrame = next - Date.now()
+        setTimeout(() => this.run(), untilNextFrame)
+    }
+
+    public tick(): void {
+        this.world.run()
+        this.display.clear()
+        this.systems.forEach((system: GameSystem) => system.draw(this.world, this.display))
     }
 }
