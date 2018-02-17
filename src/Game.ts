@@ -1,61 +1,32 @@
 import ROT, { Display } from "rot-js"
 
-import { World } from "mogwai-ecs/lib"
+import { VertexTraverser, World } from "mogwai-ecs/lib"
 
-import { InputManager } from "@/managers/InputManager"
+import { Position } from "./components/Position"
+import { Tile } from "./components/Tile"
 
 export class Game {
     public display: Display
-    private inputManager: InputManager
-    private world: World
-    private map: { [key: string]: string }
+    public world: World
 
     constructor() {
         this.display = new ROT.Display()
-        this.inputManager = new InputManager("input_mgr")
         this.world = new World()
-        this.map = {}
     }
 
     public init(): void {
         document.body.appendChild(this.display.getContainer())
-        this.inputManager.register(this.world)
-        this.generateMap()
     }
 
-    private generateMap(): void {
-        const digger = new ROT.Map.Digger()
-        const freeCells: string[] = []
-
-        const digCallback = (x: number, y: number, value: number) => {
-            if (value === 0) {
-                const key = x + "," + y
-                this.map[key] = "."
-                freeCells.push(key)
-            }
-        }
-        digger.create(digCallback.bind(this))
-
-        this.generateBoxes(freeCells)
-        this.drawWholeMap()
-    }
-
-    private generateBoxes(freeCells: string[]): void {
-        for (let i = 0; i < 10; i++) {
-            const index = Math.floor(ROT.RNG.getUniform() * freeCells.length)
-            const key = freeCells.splice(index, 1)[0]
-            this.map[key] = "*"
-        }
-    }
-
-    private drawWholeMap(): void {
-        for (const key in this.map) {
-            if (this.map.hasOwnProperty(key)) {
-                const parts = key.split(",")
-                const x = parseInt(parts[0], 10)
-                const y = parseInt(parts[1], 10)
-                this.display.draw(x, y, this.map[key])
-            }
-        }
+    public draw(): void {
+        this.world.fetch()
+            .on((t: VertexTraverser) => t.hasLabel("tile"))
+            .withComponents("position", "tile")
+            .stream()
+            .each((value: {
+                entity: number, position: Position, tile: Tile
+            }) => {
+                this.display.draw(value.position.x, value.position.y, value.tile.character)
+            })
     }
 }
