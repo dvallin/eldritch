@@ -1,5 +1,6 @@
 import { Game } from "./Game"
-import { WorldMap } from "./WorldMap"
+
+import { WorldMap } from "@/systems/WorldMap"
 
 import { InputManager } from "@/managers/InputManager"
 

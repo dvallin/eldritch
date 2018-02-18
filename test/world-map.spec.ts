@@ -1,5 +1,6 @@
 import { Game } from "@/Game"
-import { WorldMap } from "@/WorldMap"
+
+import { WorldMap } from "@/systems/WorldMap"
 
 import { expectCanvas } from "./test-utils/expect-canvas"
 import { requestAnimationFrame } from "./test-utils/request-animation-frame"

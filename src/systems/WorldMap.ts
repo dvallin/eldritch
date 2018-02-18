@@ -1,12 +1,12 @@
 import { VertexTraverser, World } from "mogwai-ecs/lib"
 
-import { GameSystem } from "@/GameSystem"
+import { GameSystem } from "@/systems/GameSystem"
 
 import { Description } from "@/components/Description"
 import { Position } from "@/components/Position"
 import ROT, { Display } from "rot-js"
 
-import { InputManager, InputState } from "@/managers/InputManager"
+import { InputManager } from "@/managers/InputManager"
 
 export class WorldMap implements GameSystem {
     public static NAME: string = "world"
@@ -78,15 +78,9 @@ export class WorldMap implements GameSystem {
     }
 
     public execute(world: World): void {
-        const inputMgr = world.fetch()
-            .on((t: VertexTraverser) => t.hasLabel(InputManager.NAME))
-            .withComponents(InputManager.NAME)
-            .first()
-        if (inputMgr) {
-            const inputState: InputState = inputMgr[InputManager.NAME]
-            if (inputState.pressed.get(ROT.VK_M)) {
-                this.showFullNames = !this.showFullNames
-            }
+        const inputMgr: InputManager = world.systems.get(InputManager.NAME) as InputManager
+        if (inputMgr && inputMgr.pressed(world, ROT.VK_M)) {
+            this.showFullNames = !this.showFullNames
         }
     }
 }

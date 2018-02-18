@@ -2,7 +2,8 @@ import ROT, { Display } from "rot-js"
 
 import { VectorStorage, World } from "mogwai-ecs/lib"
 
-import { GameSystem } from "@/GameSystem"
+import { GameSystem } from "@/systems/GameSystem"
+
 import { Manager } from "@/managers/Manager"
 
 import { Description } from "@/components/Description"

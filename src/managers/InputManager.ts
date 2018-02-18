@@ -3,7 +3,9 @@ import { World } from "mogwai-ecs/lib"
 import { Manager } from "./Manager"
 
 export interface InputState {
-    pressed: Map<number, boolean>,
+    isPressed: Map<number, boolean>,
+    pressed: Set<number>,
+    released: Set<number>,
     modifiers: Modifiers,
     mouse: Mouse,
 }
@@ -30,7 +32,9 @@ export class InputManager extends Manager<InputState> {
 
     public initialState(): InputState {
         return {
-            pressed: new Map(),
+            isPressed: new Map(),
+            pressed: new Set(),
+            released: new Set(),
             mouse: {
                 click_count: 0,
                 x: 0,
@@ -45,6 +49,10 @@ export class InputManager extends Manager<InputState> {
         }
     }
 
+    public pressed(world: World, vkCode: number): boolean {
+        return this.state(world).pressed.has(vkCode)
+    }
+
     public register(world: World, handler: GlobalEventHandlers = document): void {
         super.register(world)
 
@@ -53,6 +61,13 @@ export class InputManager extends Manager<InputState> {
         handler.addEventListener("mousemove", this.mousemove.bind(this, world))
         handler.addEventListener("mousedown", this.mousedown.bind(this, world))
         handler.addEventListener("mouseup", this.mouseup.bind(this, world))
+    }
+
+    public execute(world: World): void {
+        this.update(world, (state) => {
+            state.pressed = new Set()
+            state.released = new Set()
+        })
     }
 
     public handleModifiers(modifiers: Modifiers, { altKey, ctrlKey }: KeyboardEvent | MouseEvent): void {
@@ -84,14 +99,16 @@ export class InputManager extends Manager<InputState> {
     public keydown(world: World, event: KeyboardEvent): void {
         this.update(world, (state) => {
             this.handleModifiers(state.modifiers, event)
-            state.pressed.set(event.keyCode, true)
+            state.isPressed.set(event.keyCode, true)
+            state.pressed.add(event.keyCode)
         })
     }
 
     public keyup(world: World, event: KeyboardEvent): void {
         this.update(world, (state) => {
             this.handleModifiers(state.modifiers, event)
-            state.pressed.set(event.keyCode, false)
+            state.isPressed.set(event.keyCode, false)
+            state.released.add(event.keyCode)
         })
     }
 
