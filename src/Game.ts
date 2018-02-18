@@ -4,8 +4,6 @@ import { VectorStorage, World } from "mogwai-ecs/lib"
 
 import { GameSystem } from "@/systems/GameSystem"
 
-import { Manager } from "@/managers/Manager"
-
 import { Description } from "@/components/Description"
 import { Position } from "@/components/Position"
 
@@ -16,7 +14,6 @@ export class Game {
     public display: Display
     public world: World
 
-    private managers: Manager<{}>[]
     private systems: GameSystem[]
 
     constructor() {
@@ -30,18 +27,12 @@ export class Game {
         this.world.registerComponent("position", new VectorStorage<Position>())
         this.world.registerComponent("description", new VectorStorage<Description>())
 
-        this.managers = []
         this.systems = []
     }
 
     public addGameSystem(system: GameSystem): void {
         system.register(this.world)
         this.systems.push(system)
-    }
-
-    public addManager(manager: Manager<{}>): void {
-        manager.register(this.world)
-        this.managers.push(manager)
     }
 
     public build(): void {

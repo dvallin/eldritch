@@ -1,13 +1,12 @@
 import { Game } from "./Game"
 
+import { Input } from "@/systems/Input"
 import { WorldMap } from "@/systems/WorldMap"
-
-import { InputManager } from "@/managers/InputManager"
 
 const game = new Game()
 
 game.addGameSystem(new WorldMap())
-game.addManager(new InputManager())
+game.addGameSystem(new Input())
 
 game.build()
 game.run()
