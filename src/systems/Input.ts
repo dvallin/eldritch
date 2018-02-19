@@ -1,4 +1,5 @@
 import { World } from "mogwai-ecs/lib"
+import ROT from "rot-js"
 
 import { GameSystem } from "./GameSystem"
 
@@ -73,56 +74,67 @@ export class Input implements GameSystem {
         return this.state.pressed.has(vkCode)
     }
 
-    public handleModifiers(modifiers: Modifiers, { altKey, ctrlKey }: KeyboardEvent | MouseEvent): void {
+    public released(vkCode: number): boolean {
+        return this.state.released.has(vkCode)
+    }
+
+    get mouse(): Mouse {
+        return this.state.mouse
+    }
+
+    public isPressed(vkCode: number): boolean {
+        switch (vkCode) {
+            case ROT.VK_ALT:
+                return this.state.modifiers.alt
+            case ROT.VK_CONTROL:
+                return this.state.modifiers.alt
+            default:
+                return this.state.isPressed.get(vkCode) || false
+        }
+    }
+
+    private handleModifiers(modifiers: Modifiers, { altKey, ctrlKey }: KeyboardEvent | MouseEvent): void {
         modifiers.alt = altKey
         modifiers.ctrl = ctrlKey
     }
 
-    public handleMouse(mouse: Mouse, { pageX, pageY, button, buttons, detail }: MouseEvent): void {
-        mouse.x = pageX
-        mouse.y = pageY
 
-        if (button & 1) {
-            mouse.left = true
+    private handleMouse(mouse: Mouse, { clientX, clientY, buttons, detail }: MouseEvent, invert: boolean): void {
+        mouse.x = clientX
+        mouse.y = clientY
+        mouse.left = (buttons & 1) === 1
+        mouse.right = (buttons & 2) === 2
+        if (invert) {
+            mouse.left = !mouse.left
+            mouse.right = !mouse.right
         }
-        if (buttons & 1) {
-            mouse.left = false
-        }
-
-        if (button & 2) {
-            mouse.right = true
-        }
-        if (buttons & 2) {
-            mouse.right = false
-        }
-
         mouse.click_count = detail || 0
     }
 
-    public keydown(event: KeyboardEvent): void {
+    private keydown(event: KeyboardEvent): void {
         this.handleModifiers(this.state.modifiers, event)
         this.state.isPressed.set(event.keyCode, true)
         this.state.pressed.add(event.keyCode)
     }
 
-    public keyup(event: KeyboardEvent): void {
+    private keyup(event: KeyboardEvent): void {
         this.handleModifiers(this.state.modifiers, event)
         this.state.isPressed.set(event.keyCode, false)
         this.state.released.add(event.keyCode)
     }
 
-    public mousedown(event: MouseEvent): void {
+    private mousedown(event: MouseEvent): void {
         this.handleModifiers(this.state.modifiers, event)
-        this.handleMouse(this.state.mouse, event)
+        this.handleMouse(this.state.mouse, event, false)
     }
 
-    public mouseup(event: MouseEvent): void {
+    private mouseup(event: MouseEvent): void {
         this.handleModifiers(this.state.modifiers, event)
-        this.handleMouse(this.state.mouse, event)
+        this.handleMouse(this.state.mouse, event, true)
     }
 
-    public mousemove(event: MouseEvent): void {
+    private mousemove(event: MouseEvent): void {
         this.handleModifiers(this.state.modifiers, event)
-        this.handleMouse(this.state.mouse, event)
+        this.handleMouse(this.state.mouse, event, false)
     }
 }
