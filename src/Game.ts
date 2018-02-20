@@ -10,13 +10,27 @@ import { Position } from "@/components/Position"
 const DEFAULT_WIDTH = 100
 const DEFAULT_HEIGHT = 50
 
+export interface GameSettings {
+    framerate?: number
+}
+
+export function defaultSettings(): GameSettings {
+    return {
+        framerate: 30
+    }
+}
+
 export class Game {
     public display: Display
     public world: World
 
     private systems: GameSystem[]
 
-    constructor() {
+    private settings: GameSettings
+
+    constructor(settings?: GameSettings) {
+        this.settings = Object.assign(defaultSettings(), settings)
+
         const displayOptions: ROT.DisplayOptions = {
             width: DEFAULT_WIDTH,
             height: DEFAULT_HEIGHT
@@ -41,7 +55,7 @@ export class Game {
     }
 
     public run(): void {
-        const next = Date.now() + 100
+        const next = Date.now() + (1000 / this.settings.framerate!)
         this.tick()
         const untilNextFrame = next - Date.now()
         setTimeout(() => this.run(), untilNextFrame)

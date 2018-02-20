@@ -20,7 +20,6 @@ describe("input", () => {
     describe("keydown handling", () => {
         it("handles characters", () => {
             document.dispatchEvent(Object.assign(new Event("keydown"), { keyCode: ROT.VK_A }))
-            expect(input.pressed(ROT.VK_A)).toBeTruthy()
             expect(input.isPressed(ROT.VK_A)).toBeTruthy()
         })
 
@@ -35,8 +34,6 @@ describe("input", () => {
         it("handles characters", () => {
             document.dispatchEvent(Object.assign(new Event("keydown"), { keyCode: ROT.VK_A }))
             document.dispatchEvent(Object.assign(new Event("keyup"), { keyCode: ROT.VK_A }))
-            expect(input.pressed(ROT.VK_A)).toBeTruthy()
-            expect(input.released(ROT.VK_A)).toBeTruthy()
             expect(input.isPressed(ROT.VK_A)).toBeFalsy()
         })
 
@@ -62,7 +59,7 @@ describe("input", () => {
 
     describe("mousedown handling", () => {
         mouseButtonTests.forEach(([buttons, left, right]) => {
-            it(`should set l-button to "${left}" and r-button to ${right} on buttons ${buttons}`, () => {
+            it(`should set lr-button state to (${left}, ${right}) on buttons ${buttons}`, () => {
                 document.dispatchEvent(new MouseEvent("mousedown", {
                     buttons, clientX: 0, clientY: 0,
                 }))
@@ -73,7 +70,7 @@ describe("input", () => {
 
     describe("mouseup handling", () => {
         mouseButtonTests.forEach(([buttons, left, right]) => {
-            it(`should set l-button to "${!left}" and r-button to ${!right} on buttons ${buttons}`, () => {
+            it(`should set lr-button state to (${!left}, ${!right}) on buttons ${buttons}`, () => {
                 document.dispatchEvent(new MouseEvent("mousedown", {
                     buttons: 3, clientX: 0, clientY: 0,
                 }))
@@ -85,4 +82,34 @@ describe("input", () => {
         })
     })
 
+    describe("mousemove handling", () => {
+        it("should handle mouse move position changes", () => {
+            document.dispatchEvent(new MouseEvent("mousemove", {
+                clientX: 42, clientY: 42,
+            }))
+            expect(input.mouse).toEqual({ click_count: 0, left: false, right: false, x: 42, y: 42 })
+        })
+    })
+
+    describe("released and pressed state", () => {
+        it("capture pressed", () => {
+            document.dispatchEvent(Object.assign(new Event("keydown"), { keyCode: ROT.VK_A }))
+            expect(input.pressed(ROT.VK_A)).toBeTruthy()
+        })
+
+        it("should capture released and pressed", () => {
+            document.dispatchEvent(Object.assign(new Event("keydown"), { keyCode: ROT.VK_A }))
+            document.dispatchEvent(Object.assign(new Event("keyup"), { keyCode: ROT.VK_A }))
+            expect(input.pressed(ROT.VK_A)).toBeTruthy()
+            expect(input.released(ROT.VK_A)).toBeTruthy()
+        })
+
+        it("should reset released and pressed on draw", () => {
+            document.dispatchEvent(Object.assign(new Event("keydown"), { keyCode: ROT.VK_A }))
+            document.dispatchEvent(Object.assign(new Event("keyup"), { keyCode: ROT.VK_A }))
+            input.draw(world)
+            expect(input.pressed(ROT.VK_A)).toBeFalsy()
+            expect(input.released(ROT.VK_A)).toBeFalsy()
+        })
+    })
 })
