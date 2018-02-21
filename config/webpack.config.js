@@ -1,5 +1,5 @@
 "use strict"
-const path = require('path')
+const path = require("path")
 const utils = require("./utils")
 
 const config = require("../config")
@@ -14,14 +14,15 @@ function resolve(dir) {
 }
 
 module.exports = {
-    entry: './src/index.ts',
-    devtool: 'inline-source-map',
+    entry: "./src/index.ts",
+    devtool: "inline-source-map",
     devServer: {
         clientLogLevel: "warning",
         historyApiFallback: {
-            rewrites: [
-                { from: /.*/, to: path.posix.join(config.dev.assetsPublicPath, "index.html") },
-            ],
+            rewrites: [{
+                from: /.*/,
+                to: path.posix.join(config.dev.assetsPublicPath, "index.html")
+            }, ],
         },
         hot: true,
         contentBase: false, // since we use CopyWebpackPlugin.
@@ -29,9 +30,10 @@ module.exports = {
         host: HOST || config.dev.host,
         port: PORT || config.dev.port,
         open: config.dev.autoOpenBrowser,
-        overlay: config.dev.errorOverlay
-            ? { warnings: false, errors: true }
-            : false,
+        overlay: config.dev.errorOverlay ? {
+            warnings: false,
+            errors: true
+        } : false,
         publicPath: config.dev.assetsPublicPath,
         proxy: config.dev.proxyTable,
         quiet: true, // necessary for FriendlyErrorsPlugin
@@ -58,13 +60,11 @@ module.exports = {
     output: {
         path: config.build.assetsRoot,
         filename: "[name].js",
-        publicPath: process.env.NODE_ENV === "production"
-            ? config.build.assetsPublicPath
-            : config.dev.assetsPublicPath
+        publicPath: process.env.NODE_ENV === "production" ?
+            config.build.assetsPublicPath : config.dev.assetsPublicPath
     },
     module: {
-        rules: [
-            {
+        rules: [{
                 enforce: "pre",
                 test: /\.ts$/,
                 exclude: /node_modules/,
@@ -86,7 +86,7 @@ module.exports = {
         ]
     },
     resolve: {
-        extensions: ['.tsx', '.ts', '.js']
+        extensions: [".tsx", ".ts", ".js"]
     },
     output: {
         path: config.build.assetsRoot,

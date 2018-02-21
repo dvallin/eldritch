@@ -35,7 +35,6 @@ describe("World Map", () => {
 
         // when
         game.tick()
-        game.tick()
         await requestAnimationFrame()
 
         // then

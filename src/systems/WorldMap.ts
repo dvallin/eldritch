@@ -7,30 +7,44 @@ import { Input } from "@/systems/Input"
 import { Description } from "@/components/Description"
 import { Position } from "@/components/Position"
 
+import { toArray } from "@/rendering"
+import { render } from "@/rendering/lines"
+
 export class WorldMap implements GameSystem {
     public static NAME: string = "world"
 
-    private showFullNames: boolean = true
+    private showFullNames: boolean = false
 
     public register(world: World): void {
         world.registerSystem(WorldMap.NAME, this)
         world.registerComponent(WorldMap.NAME + "/location")
+        world.registerRelation(WorldMap.NAME + "/road")
     }
 
     public build(world: World): void {
-        const city = (name: string, x: number, y: number) => {
-            world.entity()
+        const locations: { [name: string]: number } = {}
+
+        const city = (name: string, x: number, y: number): void => {
+            locations[name] = world.entity()
                 .with("world/location")
                 .with("position", new Position(x, y))
                 .with("description", new Description(name))
                 .close()
         }
 
-        const site = (name: string, x: number, y: number) => {
-            world.entity()
+        const site = (name: string, x: number, y: number): void => {
+            locations[name] = world.entity()
                 .with("world/location")
                 .with("position", new Position(x, y))
                 .with("description", new Description(name))
+                .close()
+        }
+
+        const road = (from: number, to: number): void => {
+            world.relation()
+                .from(from)
+                .to(to)
+                .with("world/road")
                 .close()
         }
 
@@ -59,20 +73,47 @@ export class WorldMap implements GameSystem {
         city("4", 6, 6)
         city("5", 7, 8)
         city("13", 20, 4)
+
+        road(locations["San Francisco"], locations["1"])
+        road(locations["San Francisco"], locations["2"])
+        road(locations["San Francisco"], locations["5"])
+        road(locations["4"], locations["1"])
+        road(locations["4"], locations["5"])
+        road(locations["5"], locations.Arkham)
+        road(locations.London, locations.Arkham)
+        road(locations.London, locations.Rome)
+        road(locations.Rome, locations.Istanbul)
+        road(locations.Istanbul, locations["The Pyramids"])
+        road(locations["The Heart Of Africa"], locations["The Pyramids"])
+        road(locations.Sydney, locations.Antarctica)
+        road(locations.Tokyo, locations.Shanghai)
+        road(locations.Shanghai, locations["The Himalayas"])
+        road(locations["3"], locations["Buenos Aires"])
+        // road(locations["3"], locations.Sydney)
     }
 
     public draw(world: World, display: Display): void {
         world.fetch()
             .on((t: VertexTraverser) => t.hasLabel("world/location"))
             .withComponents("position", "description")
+            .subFetch("roads", (t: VertexTraverser) => t.out("world/road"), "position")
             .stream()
             .each((value: {
-                entity: number, position: Position, description: Description
+                entity: number, position: Position, description: Description,
+                roads: [{ entity: number, position: Position }]
             }) => {
                 const text = this.showFullNames ? value.description.description : "x"
-                const x = value.position.x * 3
-                const y = value.position.y * 2
-                display.draw(x, y, text)
+                const displayPosition = { x: value.position.x * 3, y: value.position.y * 2 }
+                value.roads.forEach(other => {
+                    const otherDisplayPosition = { x: other.position.x * 3, y: other.position.y * 2 }
+                    const line = toArray(render(displayPosition, otherDisplayPosition))
+                    line.slice(1, line.length - 1)
+                        .forEach(position => {
+                            display.draw(position.x, position.y, ".")
+                        })
+                })
+                display.draw(displayPosition.x, displayPosition.y, text)
+
             })
     }
 

@@ -8,3 +8,14 @@ export function toStream(iter: RenderIterator): LazyJS.Sequence<Position> {
         .takeWhile((p: Position | undefined) => p !== undefined)
         .map(p => p as Position)
 }
+
+export function toArray(iter: RenderIterator): Position[] {
+    const array = []
+    while (true) {
+        const p: Position | undefined = iter()
+        if (p === undefined) {
+            return array
+        }
+        array.push(p)
+    }
+}
