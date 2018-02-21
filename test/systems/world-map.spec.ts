@@ -2,9 +2,9 @@ import { Game } from "@/Game"
 
 import { WorldMap } from "@/systems/WorldMap"
 
+import { Input } from "@/systems/Input"
 import { expectCanvas } from "../test-utils/expect-canvas"
 import { requestAnimationFrame } from "../test-utils/request-animation-frame"
-import { Input } from "@/systems/Input";
 
 describe("World Map", () => {
 

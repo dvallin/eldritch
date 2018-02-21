@@ -14,6 +14,7 @@
     "lint": "tslint -c tslint.json '{config,src,test}/**/*.{js,jsx,ts,tsx}'"
   },
   "dependencies": {
+    "lazy.js": "^0.5.1",
     "mogwai-ecs": "^0.2.5",
     "rot-js": "^0.6.5"
   },
