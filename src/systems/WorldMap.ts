@@ -1,4 +1,4 @@
-import { VertexTraverser, World } from "mogwai-ecs/lib"
+import { VectorStorage, VertexTraverser, World } from "mogwai-ecs/lib"
 import ROT, { Display } from "rot-js"
 
 import { GameSystem } from "@/systems/GameSystem"
@@ -17,8 +17,8 @@ export class WorldMap implements GameSystem {
 
     public register(world: World): void {
         world.registerSystem(WorldMap.NAME, this)
-        world.registerComponent(WorldMap.NAME + "/location")
-        world.registerRelation(WorldMap.NAME + "/road")
+        world.registerComponent("location", new VectorStorage())
+        world.registerRelation("connection", new VectorStorage())
     }
 
     public build(world: World): void {
@@ -26,7 +26,15 @@ export class WorldMap implements GameSystem {
 
         const city = (name: string, x: number, y: number): void => {
             locations[name] = world.entity()
-                .with("world/location")
+                .with("location", { type: "city" })
+                .with("position", new Position(x, y))
+                .with("description", new Description(name))
+                .close()
+        }
+
+        const sea = (name: string, x: number, y: number): void => {
+            locations[name] = world.entity()
+                .with("location", { type: "sea" })
                 .with("position", new Position(x, y))
                 .with("description", new Description(name))
                 .close()
@@ -34,7 +42,7 @@ export class WorldMap implements GameSystem {
 
         const site = (name: string, x: number, y: number): void => {
             locations[name] = world.entity()
-                .with("world/location")
+                .with("location", { type: "site" })
                 .with("position", new Position(x, y))
                 .with("description", new Description(name))
                 .close()
@@ -44,7 +52,23 @@ export class WorldMap implements GameSystem {
             world.relation()
                 .from(from)
                 .to(to)
-                .with("world/road")
+                .with("connection", { type: "road" })
+                .close()
+        }
+
+        const train = (from: number, to: number): void => {
+            world.relation()
+                .from(from)
+                .to(to)
+                .with("connection", { type: "train" })
+                .close()
+        }
+
+        const ship = (from: number, to: number): void => {
+            world.relation()
+                .from(from)
+                .to(to)
+                .with("connection", { type: "ship" })
                 .close()
         }
 
@@ -65,55 +89,54 @@ export class WorldMap implements GameSystem {
         site("The Himalayas", 25, 10)
         site("The Pyramids", 20, 12)
         site("The Heart Of Africa", 19, 16)
-        site("Antarctica", 20, 22)
+        sea("Antarctica", 20, 22)
 
         city("1", 3, 6)
-        city("2", 2, 10)
-        city("3", 4, 18)
+        sea("2", 2, 10)
+        sea("3", 4, 18)
         city("4", 6, 6)
         city("5", 7, 8)
         city("13", 20, 4)
 
-        road(locations["San Francisco"], locations["1"])
-        road(locations["San Francisco"], locations["2"])
-        road(locations["San Francisco"], locations["5"])
+        ship(locations["San Francisco"], locations["1"])
+        ship(locations["San Francisco"], locations["2"])
+        train(locations["San Francisco"], locations["5"])
         road(locations["4"], locations["1"])
         road(locations["4"], locations["5"])
-        road(locations["5"], locations.Arkham)
-        road(locations.London, locations.Arkham)
-        road(locations.London, locations.Rome)
-        road(locations.Rome, locations.Istanbul)
-        road(locations.Istanbul, locations["The Pyramids"])
+        train(locations["5"], locations.Arkham)
+        ship(locations.London, locations.Arkham)
+        ship(locations.London, locations.Rome)
+        ship(locations.Rome, locations["The Pyramids"])
+        train(locations.Rome, locations.Istanbul)
+        train(locations.Istanbul, locations["The Pyramids"])
         road(locations["The Heart Of Africa"], locations["The Pyramids"])
-        road(locations.Sydney, locations.Antarctica)
-        road(locations.Tokyo, locations.Shanghai)
+        ship(locations.Sydney, locations.Antarctica)
+        ship(locations.Tokyo, locations.Shanghai)
         road(locations.Shanghai, locations["The Himalayas"])
-        road(locations["3"], locations["Buenos Aires"])
-        // road(locations["3"], locations.Sydney)
+        ship(locations["3"], locations["Buenos Aires"])
+        road(locations["3"], locations.Sydney)
     }
 
     public draw(world: World, display: Display): void {
         world.fetch()
-            .on((t: VertexTraverser) => t.hasLabel("world/location"))
-            .withComponents("position", "description")
-            .subFetch("roads", (t: VertexTraverser) => t.out("world/road"), "position")
+            .on((t: VertexTraverser) => t.hasLabel("location"))
+            .withComponents("position", "description", "location")
+            .relationsFetch("connections", (t: VertexTraverser) => t.outE("connection"), "connection")
+            .subFetch("roads", (t: VertexTraverser) => t.out("connection"), "position")
             .stream()
             .each((value: {
                 entity: number, position: Position, description: Description,
+                location: { type: string }
                 roads: [{ entity: number, position: Position }]
+                connections: [{ relation: number, other: number, "connection": { type: string } }]
             }) => {
-                const text = this.showFullNames ? value.description.description : "x"
                 const displayPosition = { x: value.position.x * 3, y: value.position.y * 2 }
-                value.roads.forEach(other => {
+                value.roads.forEach((other, index) => {
                     const otherDisplayPosition = { x: other.position.x * 3, y: other.position.y * 2 }
-                    const line = toArray(render(displayPosition, otherDisplayPosition))
-                    line.slice(1, line.length - 1)
-                        .forEach(position => {
-                            display.draw(position.x, position.y, ".")
-                        })
+                    const type = value.connections[index].connection.type
+                    this.renderConnection(display, type, displayPosition, otherDisplayPosition)
                 })
-                display.draw(displayPosition.x, displayPosition.y, text)
-
+                this.renderLocation(display, value.location.type, value.description.description, displayPosition)
             })
     }
 
@@ -122,5 +145,62 @@ export class WorldMap implements GameSystem {
         if (inputMgr && inputMgr.pressed(ROT.VK_M)) {
             this.showFullNames = !this.showFullNames
         }
+    }
+
+    private renderLocation(display: Display, type: string, description: string, pos: Position): void {
+        let color: string
+        if (type === "city") {
+            color = "red"
+        } else if (type === "sea") {
+            color = "blue"
+        } else if (type === "site") {
+            color = "green"
+        } else {
+            return
+        }
+        const text = this.showFullNames ? description : "x"
+        display.draw(pos.x, pos.y, text, color)
+    }
+
+    private renderConnection(display: Display, type: string, from: Position, to: Position): void {
+        let color: string
+        if (type === "road") {
+            color = "red"
+        } else if (type === "ship") {
+            color = "blue"
+        } else if (type === "train") {
+            color = "green"
+        } else {
+            return
+        }
+
+        let p0 = from
+        let p1 = to
+        if (from.x > to.x) {
+            p0 = to
+            p1 = from
+        }
+
+        if (p1.x + 20 > display.getOptions().width! && p0.x - 20 < 0) {
+            const y2 = (p0.y + p1.y) / 2
+
+            const line1 = toArray(render(p0, { x: 0, y: y2 }))
+            const line2 = toArray(render({ x: display.getOptions().width! - 1, y: y2 }, p1))
+            line1.slice(1, line1.length)
+                .forEach(position => {
+                    display.draw(position.x, position.y, ".", color)
+                })
+            line2.slice(0, line2.length - 1)
+                .forEach(position => {
+                    display.draw(position.x, position.y, ".", color)
+                })
+        } else {
+            const line = toArray(render(p0, p1))
+            line.slice(1, line.length - 1)
+                .forEach(position => {
+                    display.draw(position.x, position.y, ".", color)
+                })
+        }
+
     }
 }
