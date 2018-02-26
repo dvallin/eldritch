@@ -10,7 +10,9 @@ import { Position } from "@/components/Position"
 export class Locations implements GameSystem {
     public static NAME: string = "locations"
 
-    public renderLayer: RenderLayer = RenderLayer.Foreground
+    get renderLayer(): RenderLayer {
+        return this.showFullNames ? RenderLayer.Layer4 : RenderLayer.Layer2
+    }
 
     private locations: { [name: string]: number } = {}
     private showFullNames: boolean = false

@@ -24,7 +24,7 @@ export class Game {
     public display: Display
     public world: World
 
-    private systemsByLayer: GameSystem[][]
+    private systems: GameSystem[]
 
     private settings: GameSettings
 
@@ -41,22 +41,18 @@ export class Game {
         this.world.registerComponent("position", new VectorStorage<Position>())
         this.world.registerComponent("description", new VectorStorage<Description>())
 
-        this.systemsByLayer = []
+        this.systems = []
     }
 
     public addGameSystem(system: GameSystem): void {
         system.register(this.world)
-        const layer = this.systemsByLayer[system.renderLayer] || []
-        layer.push(system)
-        this.systemsByLayer[system.renderLayer] = layer
+        this.systems.push(system)
     }
 
     public build(): void {
         document.body.appendChild(this.display.getContainer())
-        this.systemsByLayer.forEach(layer =>
-            layer.forEach(system =>
-                system.build(this.world)
-            )
+        this.systems.forEach(system =>
+            system.build(this.world)
         )
     }
 
@@ -70,10 +66,17 @@ export class Game {
     public tick(): void {
         this.world.run()
         this.display.clear()
-        this.systemsByLayer.forEach(layer =>
+
+        const systemsByLayer: GameSystem[][] = []
+        this.systems.forEach(system => {
+            const layer = systemsByLayer[system.renderLayer] || []
+            layer.push(system)
+            systemsByLayer[system.renderLayer] = layer
+        })
+        systemsByLayer.forEach(layer => {
             layer.forEach(system =>
                 system.render(this.world, this.display)
             )
-        )
+        })
     }
 }

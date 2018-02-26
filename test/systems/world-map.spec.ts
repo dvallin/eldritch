@@ -1,6 +1,7 @@
 import { Game } from "@/Game"
 
 import { Connections } from "@/systems/Connections"
+import { Investigators } from "@/systems/Investigators"
 import { Locations } from "@/systems/Locations"
 
 import { Input } from "@/systems/Input"
@@ -20,6 +21,7 @@ describe("World Map", () => {
     it("renders cities", async () => {
         game.addGameSystem(new Locations())
         game.addGameSystem(new Connections())
+        game.addGameSystem(new Investigators())
         game.build()
 
         // when

@@ -14,7 +14,7 @@ export class Connections implements GameSystem {
 
     public static NAME: string = "connections"
 
-    public renderLayer: RenderLayer = RenderLayer.Background
+    public renderLayer: RenderLayer = RenderLayer.Layer1
 
     public register(world: World): void {
         world.registerSystem(Connections.NAME, this)
@@ -48,8 +48,6 @@ export class Connections implements GameSystem {
                 .with("connection", { type: "ship" })
                 .close()
         }
-
-
 
         ship("San Francisco", "1")
         ship("San Francisco", "2")

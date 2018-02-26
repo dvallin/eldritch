@@ -3,8 +3,10 @@ import { Display } from "rot-js"
 
 export enum RenderLayer {
     None,
-    Background,
-    Foreground,
+    Layer1,
+    Layer2,
+    Layer3,
+    Layer4,
 }
 
 export interface GameSystem extends System {
