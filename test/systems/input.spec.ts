@@ -107,7 +107,7 @@ describe("input", () => {
         it("should reset released and pressed on draw", () => {
             document.dispatchEvent(Object.assign(new Event("keydown"), { keyCode: ROT.VK_A }))
             document.dispatchEvent(Object.assign(new Event("keyup"), { keyCode: ROT.VK_A }))
-            input.draw(world)
+            input.render()
             expect(input.pressed(ROT.VK_A)).toBeFalsy()
             expect(input.released(ROT.VK_A)).toBeFalsy()
         })

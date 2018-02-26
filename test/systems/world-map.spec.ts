@@ -1,6 +1,7 @@
 import { Game } from "@/Game"
 
-import { WorldMap } from "@/systems/WorldMap"
+import { Connections } from "@/systems/Connections"
+import { Locations } from "@/systems/Locations"
 
 import { Input } from "@/systems/Input"
 import { expectCanvas } from "../test-utils/expect-canvas"
@@ -17,7 +18,8 @@ describe("World Map", () => {
     })
 
     it("renders cities", async () => {
-        game.addGameSystem(new WorldMap())
+        game.addGameSystem(new Locations())
+        game.addGameSystem(new Connections())
         game.build()
 
         // when
@@ -29,7 +31,8 @@ describe("World Map", () => {
     })
 
     it("renders full city names", async () => {
-        game.addGameSystem(new WorldMap())
+        game.addGameSystem(new Locations())
+        game.addGameSystem(new Connections())
         game.build()
         input.pressed = jest.fn().mockReturnValue(true)
 

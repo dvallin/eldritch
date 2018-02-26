@@ -1,7 +1,7 @@
 import { World } from "mogwai-ecs/lib"
 import ROT from "rot-js"
 
-import { GameSystem } from "./GameSystem"
+import { GameSystem, RenderLayer } from "./GameSystem"
 
 export interface InputState {
     isPressed: Map<number, boolean>,
@@ -26,6 +26,8 @@ export interface Mouse {
 
 export class Input implements GameSystem {
     public static NAME: string = "input_mgr"
+
+    public renderLayer: RenderLayer = RenderLayer.None
 
     private state: InputState
 
@@ -52,7 +54,7 @@ export class Input implements GameSystem {
         //
     }
 
-    public draw({ }: World): void {
+    public render(): void {
         this.state.pressed = new Set()
         this.state.released = new Set()
     }
