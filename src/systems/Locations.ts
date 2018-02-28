@@ -6,6 +6,7 @@ import { Input } from "@/systems/Input"
 
 import { Description } from "@/components/Description"
 import { Position } from "@/components/Position"
+import { DetailView } from "@/systems/DetailView"
 
 export class Locations implements GameSystem {
     public static NAME: string = "locations"
@@ -15,6 +16,7 @@ export class Locations implements GameSystem {
     }
 
     private locations: { [name: string]: number } = {}
+
     private showFullNames: boolean = false
     private built: boolean = false
 
@@ -84,20 +86,52 @@ export class Locations implements GameSystem {
 
     public execute(world: World): void {
         const inputMgr: Input = world.systems.get(Input.NAME) as Input
-        if (inputMgr && inputMgr.pressed(ROT.VK_M)) {
-            this.showFullNames = !this.showFullNames
+        if (inputMgr) {
+            if (inputMgr.pressed(ROT.VK_M)) {
+                this.showFullNames = !this.showFullNames
+            }
+            if (inputMgr.mousePressed()) {
+                const mouseDisplayPosition = {
+                    x: inputMgr.mouse.x,
+                    y: inputMgr.mouse.y
+                }
+                interface EntityWithPosition {
+                    entity: number
+                    position: Position
+                }
+                const entity = world.fetch()
+                    .on((t: VertexTraverser) => t.hasLabel("location"))
+                    .withComponents("position")
+                    .stream()
+                    .filter((value: EntityWithPosition) => {
+                        const displayPosition = { x: value.position.x * 3, y: value.position.y * 2 }
+                        return displayPosition.x === mouseDisplayPosition.x
+                            && displayPosition.y === mouseDisplayPosition.y
+                    }).map((value: EntityWithPosition) => {
+                        return value.entity
+                    })
+                    .first()
+
+                const detailView: DetailView = world.systems.get(DetailView.NAME) as DetailView
+                if (detailView) {
+                    detailView.select(entity)
+                }
+            }
         }
     }
 
     public render(world: World, display: Display): void {
+        interface LocationWithData {
+            entity: number
+            position: Position
+            description: Description
+            location: { type: string }
+        }
         world.fetch()
             .on((t: VertexTraverser) => t.hasLabel("location"))
             .withComponents("position", "description", "location")
             .stream()
-            .each((value: {
-                entity: number, position: Position, description: Description,
-                location: { type: string }
-            }) => {
+            .each((value: LocationWithData) => {
                 const displayPosition = { x: value.position.x * 3, y: value.position.y * 2 }
                 this.renderLocation(display, value.location.type, value.description.description, displayPosition)
             })

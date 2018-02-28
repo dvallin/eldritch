@@ -8,7 +8,13 @@ describe("input", () => {
     let world: World
     beforeEach(() => {
         world = new World()
-        input = new Input()
+        input = new Input((e: UIEvent) => {
+            const m = e as MouseEvent
+            if (m) {
+                return [m.clientX, m.clientY]
+            }
+            return 0
+        })
         input.build(world)
         input.register(world)
     })

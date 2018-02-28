@@ -14,7 +14,7 @@ describe("World Map", () => {
     let input: Input
     beforeEach(() => {
         game = new Game()
-        input = new Input()
+        input = new Input(game.display.eventToPosition)
         game.addGameSystem(input)
     })
 

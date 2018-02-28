@@ -4,7 +4,9 @@ import { Display } from "rot-js"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { Locations } from "@/systems/Locations"
 
+import { Description } from "@/components/Description"
 import { Position } from "@/components/Position"
+
 import { RelationBuilder } from "mogwai-ecs/lib/RelationBuilder"
 
 export class Investigators implements GameSystem {
@@ -26,6 +28,7 @@ export class Investigators implements GameSystem {
         const investigator = (at: string): void => {
             world.entity()
                 .with("investigator")
+                .with("description", new Description("Dr. A"))
                 .rel((b: RelationBuilder) => b
                     .with("isAt")
                     .to(locations.location(at))
