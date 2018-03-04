@@ -55,6 +55,7 @@
             true,
             "never"
         ],
+        "align": false,
         "trailing-comma": false,
         "typedef": [
             true,

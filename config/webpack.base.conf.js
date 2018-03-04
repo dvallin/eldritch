@@ -15,9 +15,8 @@ module.exports = {
   output: {
     path: config.build.assetsRoot,
     filename: "[name].js",
-    publicPath: process.env.NODE_ENV === "production"
-      ? config.build.assetsPublicPath
-      : config.dev.assetsPublicPath
+    publicPath: process.env.NODE_ENV === "production" ?
+      config.build.assetsPublicPath : config.dev.assetsPublicPath
   },
   resolve: {
     extensions: [".ts", ".js", ".json"],
@@ -26,8 +25,7 @@ module.exports = {
     }
   },
   module: {
-    rules: [
-      {
+    rules: [{
         enforce: "pre",
         test: /\.ts$/,
         exclude: /node_modules/,

@@ -1,0 +1,21 @@
+{
+    "tabSize": 2,
+    "indentSize": 2,
+    "indentStyle": "ts.IndentStyle.Smart",
+    "newLineCharacter": "\n",
+    "convertTabsToSpaces": true,
+
+    "insertSpaceAfterCommaDelimiter": true,
+    "insertSpaceAfterSemicolonInForStatements": true,
+    "insertSpaceBeforeAndAfterBinaryOperators": true,
+    "insertSpaceAfterKeywordsInControlFlowStatements": true,
+    "insertSpaceAfterFunctionKeywordForAnonymousFunctions": true,
+
+    "insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+    "insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
+    "insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": false,
+    "insertSpaceBeforeFunctionParenthesis": false,
+
+    "placeOpenBraceOnNewLineForFunctions": false,
+    "placeOpenBraceOnNewLineForControlBlocks": false
+}
