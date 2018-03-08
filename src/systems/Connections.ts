@@ -65,7 +65,7 @@ export class Connections implements GameSystem {
     ship("Tokyo", "Shanghai")
     road("Shanghai", "The Himalayas")
     ship("3", "Buenos Aires")
-    road("3", "Sydney")
+    ship("3", "Sydney")
   }
 
   public execute({ }: World): void {
