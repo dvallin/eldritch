@@ -1,4 +1,4 @@
-import { VertexTraverser, World, Vertex } from "mogwai-ecs/lib"
+import { Vertex, VertexTraverser, World } from "mogwai-ecs/lib"
 import { Display } from "rot-js"
 
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
@@ -15,6 +15,8 @@ export class Investigators implements GameSystem {
 
   public renderLayer: RenderLayer = RenderLayer.Layer3
 
+  private built: boolean = false
+
   private investigators: Map<string, Vertex> = new Map()
 
   public register(world: World): void {
@@ -26,25 +28,31 @@ export class Investigators implements GameSystem {
   }
 
   public build(world: World): void {
-    const locations = world.systems.get(Locations.NAME) as Locations
-    locations.build(world)
+    if (!this.built) {
+      const locations = world.systems.get(Locations.NAME) as Locations
+      locations.build(world)
 
-    const investigator = (at: string): number => {
-      const i = world.entity()
-        .with("investigator")
-        .with("description", new Description("Dr. A"))
-        .rel((b: RelationBuilder) => b
-          .with("isAt")
-          .to(locations.location(at)!)
-          .close()
-        ).close()
-      this.investigators.set("Dr. A", i)
-      return i
+      const investigator = (name: string, at: string): number => {
+        const i = world.entity()
+          .with("investigator")
+          .with("description", new Description(name))
+          .rel((b: RelationBuilder) => b
+            .with("isAt")
+            .to(locations.location(at)!)
+            .close()
+          ).close()
+        this.investigators.set(name, i)
+        return i
+      }
+
+      const firstInvestigator = investigator("Dr. A", "Arkham")
+      investigator("Dr. B", "Antarctica")
+
+      this.activate(world, firstInvestigator)
+      this.setLeader(world, firstInvestigator)
+
+      this.built = true
     }
-
-    const firstInvestigator = investigator("Arkham")
-
-    this.activate(world, firstInvestigator)
   }
 
   public investigator(name: string): Vertex | undefined {
@@ -53,8 +61,14 @@ export class Investigators implements GameSystem {
 
   public activate(world: World, entity: number): void {
     world.fetch().on((t: VertexTraverser) => t.hasLabel("active")).stream()
-      .each(active => world.graph.removeVertexLabel("active", active.entity))
+      .each(active => world.graph.removeVertexLabel(active.entity, "active"))
     world.entity(entity).with("active").close()
+  }
+
+  public setLeader(world: World, entity: number): void {
+    world.fetch().on((t: VertexTraverser) => t.hasLabel("leader")).stream()
+      .each(leader => world.graph.removeVertexLabel(leader.entity, "leader"))
+    world.entity(entity).with("leader").close()
   }
 
   public travel(world: World, entity: number, location: number): void {

@@ -6,7 +6,7 @@ import { Input } from "@/systems/Input"
 import { Investigators } from "@/systems/Investigators"
 import { Locations } from "@/systems/Locations"
 
-describe("Inspector", () => {
+describe("Investigators", () => {
     let game: Game
     let investigators: Investigators
     let input: Input
@@ -24,6 +24,20 @@ describe("Inspector", () => {
         game.build()
     })
 
+    it("creates exactly one leader", () => {
+        const leaders = game.world.fetch().on(t => t.hasLabel("leader")).collect()
+        expect(leaders).toHaveLength(1)
+    })
+
+    it("activates exactly one", () => {
+        const leaders = game.world.fetch().on(t => t.hasLabel("active")).collect()
+        expect(leaders).toHaveLength(1)
+    })
+
+    it("activates the leader", () => {
+        const leaders = game.world.fetch().on(t => t.hasLabel("leader").hasLabel("active")).collect()
+        expect(leaders).toHaveLength(1)
+    })
 
     it("travels when action is clicked", () => {
         // when

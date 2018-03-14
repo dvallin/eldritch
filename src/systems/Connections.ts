@@ -16,56 +16,62 @@ export class Connections implements GameSystem {
 
   public renderLayer: RenderLayer = RenderLayer.Layer1
 
+  private built: boolean = false
+
   public register(world: World): void {
     world.registerSystem(Connections.NAME, this)
     world.registerRelation("connection", new VectorStorage())
   }
 
   public build(world: World): void {
-    const locations = world.systems.get(Locations.NAME) as Locations
-    locations.build(world)
+    if (!this.built) {
+      const locations = world.systems.get(Locations.NAME) as Locations
+      locations.build(world)
 
-    const road = (from: string, to: string): void => {
-      world.relation()
-        .from(locations.location(from))
-        .to(locations.location(to))
-        .with("connection", { type: "road" })
-        .close()
+      const road = (from: string, to: string): void => {
+        world.relation()
+          .from(locations.location(from)!)
+          .to(locations.location(to)!)
+          .with("connection", { type: "road" })
+          .close()
+      }
+
+      const train = (from: string, to: string): void => {
+        world.relation()
+          .from(locations.location(from)!)
+          .to(locations.location(to)!)
+          .with("connection", { type: "train" })
+          .close()
+      }
+
+      const ship = (from: string, to: string): void => {
+        world.relation()
+          .from(locations.location(from)!)
+          .to(locations.location(to)!)
+          .with("connection", { type: "ship" })
+          .close()
+      }
+
+      ship("San Francisco", "1")
+      ship("San Francisco", "2")
+      train("San Francisco", "5")
+      road("4", "1")
+      road("4", "5")
+      train("5", "Arkham")
+      ship("London", "Arkham")
+      ship("London", "Rome")
+      ship("Rome", "The Pyramids")
+      train("Rome", "Istanbul")
+      train("Istanbul", "The Pyramids")
+      road("The Heart Of Africa", "The Pyramids")
+      ship("Sydney", "Antarctica")
+      ship("Tokyo", "Shanghai")
+      road("Shanghai", "The Himalayas")
+      ship("3", "Buenos Aires")
+      ship("3", "Sydney")
+
+      this.built = true
     }
-
-    const train = (from: string, to: string): void => {
-      world.relation()
-        .from(locations.location(from))
-        .to(locations.location(to))
-        .with("connection", { type: "train" })
-        .close()
-    }
-
-    const ship = (from: string, to: string): void => {
-      world.relation()
-        .from(locations.location(from))
-        .to(locations.location(to))
-        .with("connection", { type: "ship" })
-        .close()
-    }
-
-    ship("San Francisco", "1")
-    ship("San Francisco", "2")
-    train("San Francisco", "5")
-    road("4", "1")
-    road("4", "5")
-    train("5", "Arkham")
-    ship("London", "Arkham")
-    ship("London", "Rome")
-    ship("Rome", "The Pyramids")
-    train("Rome", "Istanbul")
-    train("Istanbul", "The Pyramids")
-    road("The Heart Of Africa", "The Pyramids")
-    ship("Sydney", "Antarctica")
-    ship("Tokyo", "Shanghai")
-    road("Shanghai", "The Himalayas")
-    ship("3", "Buenos Aires")
-    ship("3", "Sydney")
   }
 
   public execute({ }: World): void {
