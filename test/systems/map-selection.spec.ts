@@ -11,11 +11,9 @@ describe("World Map", () => {
     let input: Input
     let detailView: DetailView
     let locations: Locations
-    let draw: jest.SpyInstance<{}>
     beforeEach(() => {
         game = new Game()
         input = new Input(game.display.eventToPosition)
-        draw = jest.spyOn(game.display, "draw")
         detailView = new DetailView()
         locations = new Locations()
         game.addGameSystem(input)

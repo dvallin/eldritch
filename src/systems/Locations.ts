@@ -1,4 +1,4 @@
-import { VectorStorage, VertexTraverser, World } from "mogwai-ecs/lib"
+import { VectorStorage, Vertex, VertexTraverser, World } from "mogwai-ecs/lib"
 import ROT, { Display } from "rot-js"
 
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
@@ -25,7 +25,7 @@ export class Locations implements GameSystem {
     world.registerComponent("location", new VectorStorage())
   }
 
-  public location(name: string): number {
+  public location(name: string): Vertex | undefined {
     return this.locations[name]
   }
 
