@@ -1,4 +1,4 @@
-import { Vertex, VertexTraverser, World } from "mogwai-ecs/lib"
+import { MapStorage, Vertex, VertexTraverser, World } from "mogwai-ecs/lib"
 import { Display } from "rot-js"
 
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
@@ -22,7 +22,7 @@ export class Investigators implements GameSystem {
 
   public register(world: World): void {
     world.registerSystem(Investigators.NAME, this)
-    world.registerComponent("investigator")
+    world.registerComponent("investigator", new MapStorage<Investigator>())
     world.registerComponent("active")
     world.registerComponent("leader")
     world.registerRelation("isAt")

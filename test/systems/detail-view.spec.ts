@@ -56,7 +56,7 @@ describe("Detail View", () => {
     })
 
     it("draws connections of selected locations", () => {
-        detailView.select(locations.location("London"))
+        detailView.select(game.world, locations.location("London"))
         detailView.render(game.world, game.display)
         expectDrawText(
             "London is a city",
@@ -66,7 +66,7 @@ describe("Detail View", () => {
     })
 
     it("draws investigators of selected locations", () => {
-        detailView.select(locations.location("Arkham"))
+        detailView.select(game.world, locations.location("Arkham"))
         detailView.render(game.world, game.display)
         expectDrawText(
             "Arkham is a city",
@@ -77,7 +77,7 @@ describe("Detail View", () => {
 
     it("navigates connection when clicked", () => {
         // given
-        detailView.select(locations.location("London"))
+        detailView.select(game.world, locations.location("London"))
         input.mousePressed = jest.fn().mockReturnValue(true)
         input.mouse.y = 4
         detailView.execute(game.world)

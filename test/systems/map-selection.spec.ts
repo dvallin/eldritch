@@ -28,7 +28,7 @@ describe("World Map", () => {
         input.mouse.y = 16
         const select = jest.spyOn(detailView, "select")
         game.tick()
-        expect(select).toHaveBeenCalledWith(locations.location("Arkham"))
+        expect(select).toHaveBeenCalledWith(game.world, locations.location("Arkham"))
     })
 })
 

@@ -23,6 +23,7 @@ export class Locations implements GameSystem {
   public register(world: World): void {
     world.registerSystem(Locations.NAME, this)
     world.registerComponent("location", new VectorStorage())
+    world.registerComponent("highlight")
   }
 
   public location(name: string): Vertex | undefined {
@@ -107,15 +108,34 @@ export class Locations implements GameSystem {
       entity: number
       position: Position
       description: Description
+      highlight: null | undefined
       location: { type: string }
     }
     world.fetch()
       .on((t: VertexTraverser) => t.hasLabel("location"))
-      .withComponents("position", "description", "location")
+      .withComponents("position", "description", "location", "highlight")
       .stream()
       .each((value: LocationWithData) => {
+        const isHighlighted = value.highlight !== undefined
         const displayPosition = { x: value.position.x * 3, y: value.position.y * 2 }
-        this.renderLocation(display, value.location.type, value.description.description, displayPosition)
+        this.renderLocation(display, value.location.type,
+          value.description.description, displayPosition,
+          isHighlighted)
+      })
+  }
+
+  public hightlight(world: World, highlights: number[]): void {
+    highlights.forEach(v => {
+      world.entity(v).with("highlight").close()
+    })
+  }
+
+  public clearHightlights(world: World): void {
+    world.fetch()
+      .on(t => t.hasLabel("highlight"))
+      .stream()
+      .each(v => {
+        world.entity(v.entity).withOut("highlight").close()
       })
   }
 
@@ -134,8 +154,7 @@ export class Locations implements GameSystem {
       .stream()
       .filter((value: EntityWithPosition) => {
         const displayPosition = { x: value.position.x * 3, y: value.position.y * 2 }
-        return displayPosition.x === position.x
-          && displayPosition.y === position.y
+        return displayPosition.x === position.x && displayPosition.y === position.y
       }).map((value: EntityWithPosition) => {
         return value.entity
       })
@@ -143,13 +162,18 @@ export class Locations implements GameSystem {
 
     const detailView: DetailView = world.systems.get(DetailView.NAME) as DetailView
     if (detailView) {
-      detailView.select(entity)
+      detailView.select(world, entity)
     }
   }
 
-  private renderLocation(display: Display, type: string, description: string, pos: Position): void {
+  private renderLocation(
+    display: Display, type: string, description: string,
+    pos: Position, isHighlighted: boolean
+  ): void {
     let color: string
-    if (type === "city") {
+    if (isHighlighted) {
+      color = "gold"
+    } else if (type === "city") {
       color = "red"
     } else if (type === "sea") {
       color = "blue"

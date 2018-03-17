@@ -6,6 +6,8 @@ export class Investigator {
         public influence: number,
         public observation: number,
         public strength: number,
-        public will: number
+        public will: number,
+        public trainTickets: number = 0,
+        public shipTickets: number = 0
     ) { }
 }

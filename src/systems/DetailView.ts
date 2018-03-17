@@ -4,8 +4,10 @@ import { Display } from "rot-js"
 import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { Input } from "@/systems/Input"
 import { Investigators } from "@/systems/Investigators"
+import { Locations } from "@/systems/Locations"
 
 import { Description } from "@/components/Description"
+import { Investigator } from "@/components/Investigator"
 
 interface EntityWithDescription {
   entity: number
@@ -47,6 +49,7 @@ class InputReceived implements State {
 interface InvestigatorWithData {
   entity: number
   description: Description
+  investigator: Investigator
   connections: EntityWithDescription[]
 }
 
@@ -66,7 +69,7 @@ export class DetailView implements GameSystem {
     world.registerSystem(DetailView.NAME, this)
   }
 
-  public select(entity: number | undefined): void {
+  public select(world: World, entity: number | undefined): void {
     if (Idle.isType(this.state)) {
       if (entity === undefined) {
         this.selectedEntities = []
@@ -75,6 +78,8 @@ export class DetailView implements GameSystem {
       }
     } else if (WaitForInput.isType(this.state)) {
       if (entity === undefined) {
+        const locations: Locations = world.systems.get(Locations.NAME) as Locations
+        locations.clearHightlights(world)
         this.state = new Idle()
       } else {
         const context = (this.state as WaitForInput).context
@@ -118,8 +123,13 @@ export class DetailView implements GameSystem {
 
   private doTravelAction(world: World, location: number): void {
     const investigator = this.activeInvestigator(world)
-    const investigators: Investigators = world.systems.get(Investigators.NAME) as Investigators
-    investigators.travel(world, investigator.entity, location)
+    if (investigator.connections.find(c => c.entity === location)) {
+      const investigators: Investigators = world.systems.get(Investigators.NAME) as Investigators
+      investigators.travel(world, investigator.entity, location)
+    }
+
+    const locations: Locations = world.systems.get(Locations.NAME) as Locations
+    locations.clearHightlights(world)
   }
 
   private renderActiveInvestigator(world: World, display: Display): void {
@@ -127,15 +137,37 @@ export class DetailView implements GameSystem {
     this.renderHeader(display, investigator.description.description)
     const actions = ["Travel"]
     this.renderList(display, "Actions", 1, actions,
-      (line => this.state = new WaitForInput(actions[line]))
+      (line => {
+        this.state = new WaitForInput(actions[line])
+        if (line === 0) {
+          const locations: Locations = world.systems.get(Locations.NAME) as Locations
+          locations.hightlight(world, investigator.connections.map(c => c.entity))
+        }
+      })
     )
   }
 
   private activeInvestigator(world: World): InvestigatorWithData {
-    return world.fetch()
+    const investigator: InvestigatorWithData = world.fetch()
       .on((t: VertexTraverser) => t.hasLabel("investigator").hasLabel("active"))
-      .withComponents("description")
+      .withComponents("description", "investigator")
       .first()
+    investigator.connections = world.fetch(investigator.entity)
+      .on(t => this.layerTraverser(t, 1 + investigator.investigator.trainTickets + investigator.investigator.trainTickets))
+      .withComponents("description")
+      .collect()
+    return investigator
+  }
+
+  private layerTraverser(t: VertexTraverser, layers: number): VertexTraverser {
+    let traverser = t.out("isAt")
+    const layerSnapshots = []
+    for (let layer = 0; layer < layers; layer++) {
+      const layerSnapshot = `detail-view-layer-snapshot-${layer}`
+      traverser = traverser.both("connection").as(layerSnapshot)
+      layerSnapshots.push(layerSnapshot)
+    }
+    return traverser.or(...layerSnapshots)
   }
 
   private renderSelectedEntities(world: World, display: Display): void {
