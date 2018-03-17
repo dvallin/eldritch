@@ -7,16 +7,55 @@ import { Investigators } from "@/systems/Investigators"
 
 import { Description } from "@/components/Description"
 
-
 interface EntityWithDescription {
   entity: number
   description: Description
+}
+
+interface State {
+  type: string
+}
+
+class Idle implements State {
+  public static isType(x: State): x is WaitForInput {
+    return x.type === "Idle"
+  }
+
+  public type: string = "Idle"
+}
+
+class WaitForInput implements State {
+  public static isType(x: State): x is WaitForInput {
+    return x.type === "WaitForInput"
+  }
+
+  public type: string = "WaitForInput"
+
+  constructor(public context: string) { }
+}
+
+class InputReceived implements State {
+  public static isType(x: State): x is WaitForInput {
+    return x.type === "InputReceived"
+  }
+
+  public type: string = "InputReceived"
+
+  constructor(public context: string, public input: number) { }
+}
+
+interface InvestigatorWithData {
+  entity: number
+  description: Description
+  connections: EntityWithDescription[]
 }
 
 export class DetailView implements GameSystem {
   public static NAME: string = "detail_view"
 
   public renderLayer: RenderLayer = RenderLayer.Layer4
+
+  private state: State = new Idle()
 
   private selectedEntities: number[] = []
 
@@ -28,10 +67,19 @@ export class DetailView implements GameSystem {
   }
 
   public select(entity: number | undefined): void {
-    if (entity === undefined) {
-      this.selectedEntities = []
-    } else {
-      this.selectedEntities = [entity]
+    if (Idle.isType(this.state)) {
+      if (entity === undefined) {
+        this.selectedEntities = []
+      } else {
+        this.selectedEntities = [entity]
+      }
+    } else if (WaitForInput.isType(this.state)) {
+      if (entity === undefined) {
+        this.state = new Idle()
+      } else {
+        const context = (this.state as WaitForInput).context
+        this.state = new InputReceived(context, entity)
+      }
     }
   }
 
@@ -47,6 +95,17 @@ export class DetailView implements GameSystem {
         this.clickLine = inputMgr.mouse.y
       }
     }
+    if (InputReceived.isType(this.state)) {
+      const state: InputReceived = (this.state as InputReceived)
+      switch (state.context) {
+        case "Travel":
+          this.doTravelAction(world, state.input)
+          break
+        default:
+          throw new Error(`Context ${state.context} not supported by DetailView`)
+      }
+      this.state = new Idle()
+    }
   }
 
   public render(world: World, display: Display): void {
@@ -57,24 +116,26 @@ export class DetailView implements GameSystem {
     }
   }
 
+  private doTravelAction(world: World, location: number): void {
+    const investigator = this.activeInvestigator(world)
+    const investigators: Investigators = world.systems.get(Investigators.NAME) as Investigators
+    investigators.travel(world, investigator.entity, location)
+  }
+
   private renderActiveInvestigator(world: World, display: Display): void {
-    interface InvestigatorWithData {
-      entity: number
-      description: Description
-      connections: EntityWithDescription[]
-    }
-    world.fetch()
+    const investigator = this.activeInvestigator(world)
+    this.renderHeader(display, investigator.description.description)
+    const actions = ["Travel"]
+    this.renderList(display, "Actions", 1, actions,
+      (line => this.state = new WaitForInput(actions[line]))
+    )
+  }
+
+  private activeInvestigator(world: World): InvestigatorWithData {
+    return world.fetch()
       .on((t: VertexTraverser) => t.hasLabel("investigator").hasLabel("active"))
-      .subFetch("connections", (t: VertexTraverser) => t.out("isAt").both("connection"), "description")
       .withComponents("description")
-      .stream()
-      .each((investigator: InvestigatorWithData) => {
-        this.renderHeader(display, investigator.description.description)
-        this.renderValues(display, "Travel Actions", investigator.connections, 1, (e: number) => {
-          const investigators: Investigators = world.systems.get(Investigators.NAME) as Investigators
-          investigators.travel(world, investigator.entity, e)
-        })
-      })
+      .first()
   }
 
   private renderSelectedEntities(world: World, display: Display): void {
@@ -96,8 +157,8 @@ export class DetailView implements GameSystem {
         this.renderLocation(display, value.location.type, value.description.description)
         const callback = (entity: number) => this.selectedEntities.push(entity)
         let offsetY = 1
-        offsetY += this.renderValues(display, "Investigators", value.investigators, offsetY, callback)
-        this.renderValues(display, "Connections", value.connections, offsetY, callback)
+        offsetY += this.renderEntitiesAsList(display, "Investigators", offsetY, value.investigators, callback)
+        this.renderEntitiesAsList(display, "Connections", offsetY, value.connections, callback)
       })
     world.fetch(selectedEntity)
       .on((t: VertexTraverser) => t.hasLabel("investigator"))
@@ -133,25 +194,35 @@ export class DetailView implements GameSystem {
     }
   }
 
-  private renderValues(
-    display: Display, header: string, values: EntityWithDescription[], offsetY: number,
+  private renderEntitiesAsList(
+    display: Display, header: string, offsetY: number, entities: EntityWithDescription[],
     clickCallback: (e: number) => void,
   ): number {
+    return this.renderList(display, header, offsetY,
+      entities.map(v => v.description.description),
+      (line: number) => clickCallback(entities[line].entity)
+    )
+  }
+
+  private renderList(
+    display: Display, header: string, offsetY: number,
+    lines: string[], clickCallback: (line: number) => void,
+  ): number {
     display.drawText(0, offsetY, header, 70)
-    values.forEach((value, index) => {
+    lines.forEach((line, index) => {
       const y = index + offsetY + 1
       if (this.clickLine === y) {
-        clickCallback(value.entity)
+        clickCallback(index)
         this.clickLine = undefined
       }
-      const text = value.description.description
+      const text = line
       const bg = this.hoverLine === y ? "grey" : "black"
       this.drawText(display, 1, y, text, 70, bg)
     })
-    if (values.length === 0) {
+    if (lines.length === 0) {
       this.drawText(display, 1, offsetY + 1, "----", 70)
     }
-    return 1 + (values.length || 1)
+    return 1 + (lines.length || 1)
   }
 
   private drawText(display: Display, x: number, y: number, text: string, maxWidth: number,

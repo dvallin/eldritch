@@ -39,16 +39,21 @@ describe("Investigators", () => {
         expect(leaders).toHaveLength(1)
     })
 
-    it("travels when action is clicked", () => {
+    it("awaits input when travel action is clicked and travels on location selection", () => {
         // when
         input.mousePressed = jest.fn().mockReturnValue(true)
         input.mouse.y = 2
 
-        detailView.execute(game.world)
-        detailView.render(game.world, game.display)
+        game.tick()
+
+        input.mousePressed = jest.fn().mockReturnValue(true)
+        input.mouse.x = 45
+        input.mouse.y = 14
+
+        game.tick()
 
         // then
-        const newLocation = game.world.fetch(investigators.investigator("Dr. A"))
+        const newLocation = game.world.fetch(investigators.investigator("Norman Whithers"))
             .on(t => t.out("isAt"))
             .withComponents("description")
             .first()

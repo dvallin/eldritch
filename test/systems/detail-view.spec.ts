@@ -50,8 +50,8 @@ describe("Detail View", () => {
     it("draws investigator info if nothing is selected", () => {
         detailView.render(game.world, game.display)
         expectDrawText(
-            "Dr. A",
-            "Travel Actions", " London", " 5"
+            "Norman Whithers",
+            "Actions", " Travel"
         )
     })
 
@@ -70,7 +70,7 @@ describe("Detail View", () => {
         detailView.render(game.world, game.display)
         expectDrawText(
             "Arkham is a city",
-            "Investigators", " Dr. A",
+            "Investigators", " Norman Whithers",
             "Connections", " London", " 5"
         )
     })

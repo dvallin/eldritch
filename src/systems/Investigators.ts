@@ -5,6 +5,7 @@ import { GameSystem, RenderLayer } from "@/systems/GameSystem"
 import { Locations } from "@/systems/Locations"
 
 import { Description } from "@/components/Description"
+import { Investigator } from "@/components/Investigator"
 import { Position } from "@/components/Position"
 
 import { RelationBuilder } from "mogwai-ecs/lib/RelationBuilder"
@@ -32,9 +33,9 @@ export class Investigators implements GameSystem {
       const locations = world.systems.get(Locations.NAME) as Locations
       locations.build(world)
 
-      const investigator = (name: string, at: string): number => {
+      const investigator = (name: string, at: string, instance: Investigator): number => {
         const i = world.entity()
-          .with("investigator")
+          .with("investigator", instance)
           .with("description", new Description(name))
           .rel((b: RelationBuilder) => b
             .with("isAt")
@@ -45,8 +46,8 @@ export class Investigators implements GameSystem {
         return i
       }
 
-      const firstInvestigator = investigator("Dr. A", "Arkham")
-      investigator("Dr. B", "Antarctica")
+      const firstInvestigator = investigator("Norman Whithers", "Arkham", new Investigator(5, 7, 3, 1, 3, 2, 4))
+      investigator("Lola Hayes", "Tokyo", new Investigator(5, 7, 2, 4, 2, 2, 3))
 
       this.activate(world, firstInvestigator)
       this.setLeader(world, firstInvestigator)

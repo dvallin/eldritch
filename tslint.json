@@ -40,6 +40,7 @@
             true,
             "check-function-in-method"
         ],
+        "max-classes-per-file": false,
         "no-switch-case-fall-through": true,
         "space-before-function-paren": [
             true,
