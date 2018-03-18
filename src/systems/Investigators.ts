@@ -72,6 +72,14 @@ export class Investigators implements GameSystem {
     world.entity(entity).with("leader").close()
   }
 
+  public buyShipTicket(world: World, entity: number): void {
+    world.entity(entity).update("investigator", (i: Investigator) => i.shipTickets++).close()
+  }
+
+  public buyTrainTicket(world: World, entity: number): void {
+    world.entity(entity).update("investigator", (i: Investigator) => i.trainTickets++).close()
+  }
+
   public travel(world: World, entity: number, location: number): void {
     interface InvestigatorWithLocation { isAt: { relation: number }[] }
     world.fetch(entity)

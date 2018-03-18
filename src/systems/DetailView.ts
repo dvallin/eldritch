@@ -52,6 +52,8 @@ interface InvestigatorWithData {
   entity: number
   description: Description
   investigator: Investigator
+  connectionTypes: { relation: number, other: number, connection: { type: string } }[]
+  location: { entity: number, location: { type: string } }[]
   connections: EntityWithDescription[]
 }
 
@@ -138,12 +140,28 @@ export class DetailView implements GameSystem {
     const investigator = this.activeInvestigator(world)
     this.renderHeader(display, investigator.description.description)
     const actions = ["Travel"]
+    if (investigator.location[0].location.type === "city") {
+      if (investigator.connectionTypes.find(c => c.connection.type === "train")) {
+        actions.push("Buy train ticket")
+      }
+      if (investigator.connectionTypes.find(c => c.connection.type === "ship")) {
+        actions.push("Buy ship ticket")
+      }
+    }
+
     this.renderList(display, "Actions", 1, actions,
       (line => {
+        const action = actions[line]
         this.state = new WaitForInput(actions[line])
-        if (line === 0) {
+        if (action === "Travel") {
           const locations: Locations = world.systems.get(Locations.NAME) as Locations
           locations.hightlight(world, investigator.connections.map(c => c.entity))
+        } else if (action === "Buy train ticket") {
+          const investigators: Investigators = world.systems.get(Investigators.NAME) as Investigators
+          investigators.buyTrainTicket(world, investigator.entity)
+        } else if (action === "Buy ship ticket") {
+          const investigators: Investigators = world.systems.get(Investigators.NAME) as Investigators
+          investigators.buyShipTicket(world, investigator.entity)
         }
       })
     )
@@ -152,6 +170,8 @@ export class DetailView implements GameSystem {
   private activeInvestigator(world: World): InvestigatorWithData {
     const investigator: InvestigatorWithData = world.fetch()
       .on((t: VertexTraverser) => t.hasLabel("investigator").hasLabel("active"))
+      .subFetch("location", t => t.out("isAt"), "location")
+      .relationsFetch("connectionTypes", v => v.out("isAt").bothE("connection"), "connection")
       .withComponents("description", "investigator")
       .first()
     investigator.connections = world.fetch(investigator.entity)

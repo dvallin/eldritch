@@ -18,9 +18,7 @@ export function travelTraversal(t: VertexTraverser, train: number, ship: number,
     if (train > 0) {
         t = t.from(`${train - 1}-${ship}-${walk}`)
             .bothE("connection")
-            .matchesValue("connection", (v: { type: string }) => {
-                return v.type === "train"
-            })
+            .matchesValue("connection", (v: { type: string }) => v.type === "train")
             .both()
             .as("a")
         snaps.push("a")
@@ -28,9 +26,7 @@ export function travelTraversal(t: VertexTraverser, train: number, ship: number,
     if (ship > 0) {
         t = t.from(`${train}-${ship - 1}-${walk}`)
             .bothE("connection")
-            .matchesValue("connection", (v: { type: string }) => {
-                return v.type === "ship"
-            })
+            .matchesValue("connection", (v: { type: string }) => v.type === "ship")
             .both()
             .as("b")
         snaps.push("b")
