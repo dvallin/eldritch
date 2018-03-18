@@ -52,16 +52,18 @@ export class Connections implements GameSystem {
           .close()
       }
 
+      ship("London", "Arkham")
+      ship("London", "Rome")
+
+      train("5", "Arkham")
+      ship("Rome", "The Pyramids")
+      train("Rome", "Istanbul")
+
       ship("San Francisco", "1")
       ship("San Francisco", "2")
       train("San Francisco", "5")
       road("4", "1")
       road("4", "5")
-      train("5", "Arkham")
-      ship("London", "Arkham")
-      ship("London", "Rome")
-      ship("Rome", "The Pyramids")
-      train("Rome", "Istanbul")
       train("Istanbul", "The Pyramids")
       road("The Heart Of Africa", "The Pyramids")
       ship("Sydney", "Antarctica")

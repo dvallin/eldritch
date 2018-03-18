@@ -9,6 +9,8 @@ import { Locations } from "@/systems/Locations"
 import { Description } from "@/components/Description"
 import { Investigator } from "@/components/Investigator"
 
+import { travelTraversal } from "@/traversals/travel"
+
 interface EntityWithDescription {
   entity: number
   description: Description
@@ -153,21 +155,10 @@ export class DetailView implements GameSystem {
       .withComponents("description", "investigator")
       .first()
     investigator.connections = world.fetch(investigator.entity)
-      .on(t => this.layerTraverser(t, 1 + investigator.investigator.trainTickets + investigator.investigator.trainTickets))
+      .on(t => travelTraversal(t.out("isAt"), investigator.investigator.trainTickets, investigator.investigator.shipTickets))
       .withComponents("description")
       .collect()
     return investigator
-  }
-
-  private layerTraverser(t: VertexTraverser, layers: number): VertexTraverser {
-    let traverser = t.out("isAt")
-    const layerSnapshots = []
-    for (let layer = 0; layer < layers; layer++) {
-      const layerSnapshot = `detail-view-layer-snapshot-${layer}`
-      traverser = traverser.both("connection").as(layerSnapshot)
-      layerSnapshots.push(layerSnapshot)
-    }
-    return traverser.or(...layerSnapshots)
   }
 
   private renderSelectedEntities(world: World, display: Display): void {
