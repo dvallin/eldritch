@@ -139,5 +139,21 @@ describe("Travel", () => {
                 },
             ])
         })
+
+        it("only gives one choice if there is only one", () => {
+            const s = locations.location("London")!
+            const a = locations.location("Arkham")!
+            const b = locations.location("5")!
+            const d = locations.location("4")!
+
+            const path = findTravelPaths(game.world, s, d, 5, 5)
+            expect(path).toEqual([
+                {
+                    path: [s, a, b, d], costOptions: [
+                        { ship: 1, train: 1 }
+                    ]
+                },
+            ])
+        })
     })
 })

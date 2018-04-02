@@ -17,14 +17,15 @@ export interface TravelPath {
 }
 
 export function findTravelPaths(
-    w: World, from: number, to: number, train: number, ship: number, walk: number = 1
+    w: World, from: number, to: number, train: number, ship: number
 ): TravelPath[] {
+    const walk = 1
     const search = new Search(w.graph)
     const paths = search.paths(from, to,
         (node) => w.fetch(node).relationsFetch("bothE", f => f.bothE()).first().bothE
     )
     let bestPaths: TravelPath[] = []
-    let currentPrice = (train + ship + 1)
+    let currentPrice = (train + ship + walk)
     paths.forEach(edgePath => {
         const pathCost = aggregateCostsAlongPath(w, edgePath)
         const walkOffset = walk - pathCost.walk
@@ -118,24 +119,33 @@ function calculateCostOptions(
     pathCost: PathCost, reachableWithShipOffset: boolean, reachableWithTrainOffset: boolean, walkOffset: number
 ): CostOption[] {
     const costOptions: CostOption[] = []
-    if (reachableWithShipOffset) {
-        const proposedShipTicketUsage = pathCost.ship - walkOffset
-        if (proposedShipTicketUsage >= 0) {
-            costOptions.push({
-                ship: proposedShipTicketUsage,
-                train: pathCost.train
-            })
+    if (walkOffset > 0) {
+        if (reachableWithShipOffset) {
+            const proposedShipTicketUsage = pathCost.ship - walkOffset
+            if (proposedShipTicketUsage >= 0) {
+                costOptions.push({
+                    ship: proposedShipTicketUsage,
+                    train: pathCost.train
+                })
+            }
         }
-    }
-    if (reachableWithTrainOffset) {
-        const proposedTrainTicketUsage = pathCost.train - walkOffset
-        if (proposedTrainTicketUsage >= 0) {
-            costOptions.push({
-                ship: pathCost.ship,
-                train: proposedTrainTicketUsage
-            })
+        if (reachableWithTrainOffset) {
+            const proposedTrainTicketUsage = pathCost.train - walkOffset
+            if (proposedTrainTicketUsage >= 0) {
+                costOptions.push({
+                    ship: pathCost.ship,
+                    train: proposedTrainTicketUsage
+                })
+            }
         }
+    } else {
+        // note: if walkOffset === 0 then reachableWithShipOffset && reachableWithTrainOffset. but that is too implicit for me.
+        costOptions.push({
+            ship: pathCost.ship,
+            train: pathCost.train
+        })
     }
+
     return costOptions
 }
 
