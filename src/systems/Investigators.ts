@@ -10,6 +10,8 @@ import { Position } from "@/components/Position"
 
 import { RelationBuilder } from "mogwai-ecs/lib/RelationBuilder"
 
+import { findTravelPaths } from "@/traversals/travel"
+
 export class Investigators implements GameSystem {
 
   public static NAME: string = "investigators"
@@ -80,16 +82,32 @@ export class Investigators implements GameSystem {
     world.entity(entity).update("investigator", (i: Investigator) => i.trainTickets++).close()
   }
 
-  public travel(world: World, entity: number, location: number): void {
-    interface InvestigatorWithLocation { isAt: { relation: number }[] }
-    world.fetch(entity)
+  public travel(world: World, entity: number, from: number, to: number): void {
+    interface InvestigatorWithData { investigator: Investigator, isAt: { relation: number }[], }
+
+    const investigator = world.fetch(entity)
+      .withComponents("investigator")
       .relationsFetch("isAt", (t: VertexTraverser) => t.outE("isAt"))
-      .stream().each((e: InvestigatorWithLocation) => {
-        world.graph.removeEdge(e.isAt[0].relation)
-      })
+      .first() as InvestigatorWithData
+
+    const travelPaths = findTravelPaths(
+      world, from, to, investigator.investigator.trainTickets, investigator.investigator.shipTickets
+    )
+
+    // TODO: give user posibility to choose here, or abort...
+    const cost = travelPaths[0].costOptions[0]
+
+    world.entity(entity)
+      .update("investigator", (i: Investigator) => {
+        i.trainTickets -= cost.train
+        i.shipTickets -= cost.ship
+      }).close()
+
+    world.graph.removeEdge(investigator.isAt[0].relation)
+
     world.relation()
       .from(entity)
-      .to(location)
+      .to(to)
       .with("isAt")
       .close()
   }

@@ -129,7 +129,7 @@ export class DetailView implements GameSystem {
     const investigator = this.activeInvestigator(world)
     if (investigator.connections.find(c => c.entity === location)) {
       const investigators: Investigators = world.systems.get(Investigators.NAME) as Investigators
-      investigators.travel(world, investigator.entity, location)
+      investigators.travel(world, investigator.entity, investigator.location[0].entity, location)
     }
 
     const locations: Locations = world.systems.get(Locations.NAME) as Locations

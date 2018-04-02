@@ -80,6 +80,9 @@ export class Locations implements GameSystem {
       sea("3", 4, 18)
       city("4", 6, 6)
       city("5", 7, 8)
+      city("6", 6, 9)
+      city("7", 8, 11)
+      city("8", 10, 10)
       city("13", 20, 4)
     }
     this.built = true

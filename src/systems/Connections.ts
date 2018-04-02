@@ -56,12 +56,17 @@ export class Connections implements GameSystem {
       ship("London", "Rome")
 
       train("5", "Arkham")
+      train("San Francisco", "6")
+      train("6", "Arkham")
       ship("Rome", "The Pyramids")
       train("Rome", "Istanbul")
 
       ship("San Francisco", "1")
       ship("San Francisco", "2")
-      train("San Francisco", "5")
+      ship("San Francisco", "7")
+      ship("7", "8")
+      ship("8", "Arkham")
+      train("5", "San Francisco")
       road("4", "1")
       road("4", "5")
       train("Istanbul", "The Pyramids")
@@ -90,12 +95,12 @@ export class Connections implements GameSystem {
       .each((value: {
         entity: number, position: Position, description: Description,
         roads: [{ entity: number, position: Position }]
-        connections: [{ relation: number, other: number, "connection": { type: string } }]
+        connections: [{ relation: number, other: number, connection: { type: string } }]
       }) => {
         const displayPosition = { x: value.position.x * 3, y: value.position.y * 2 }
-        value.roads.forEach((other, index) => {
+        value.roads.forEach(other => {
           const otherDisplayPosition = { x: other.position.x * 3, y: other.position.y * 2 }
-          const type = value.connections[index].connection.type
+          const type = value.connections.find((connection => connection.other === other.entity))!.connection.type
           this.renderConnection(display, type, displayPosition, otherDisplayPosition)
         })
       })
